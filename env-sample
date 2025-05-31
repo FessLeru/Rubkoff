@@ -1,0 +1,38 @@
+# Необходимые настройки (обязательно заполните)
+BOT_TOKEN=your_bot_token_here
+OPENAI_API_KEY=your_openai_api_key_here
+
+# Настройки администраторов
+# IDs через запятую, без пробелов: 123456789,987654321
+ADMIN_IDS=123456789,987654321
+NOTIFICATION_CHAT_ID=-100123456789
+
+# Настройки OpenAI API (опционально)
+OPENAI_MODEL=gpt-3.5-turbo
+OPENAI_MAX_TOKENS=1000
+OPENAI_TEMPERATURE=0.7
+
+# Настройки базы данных (опционально)
+DATABASE_URL=sqlite+aiosqlite:///houses.db
+
+# Настройки сайта (опционально)
+RUBKOFF_URL=https://rubkoff.ru/catalog/doma-v-prodazhe/
+RUBKOFF_WORKS_URL=https://rubkoff.ru/nashi-raboty/
+COMPANY_NAME=Rubkoff
+COMPANY_WEBSITE=https://rubkoff.ru
+
+# Настройки приложения (опционально)
+DEBUG=False
+LOG_LEVEL=INFO
+LOG_FILE=bot.log
+
+# Языковые настройки (опционально)
+DEFAULT_LANGUAGE=ru
+
+# Форматирование ответов (опционально)
+CURRENCY_SYMBOL=₽
+AREA_SYMBOL=м²
+
+# Настройки рассылки (опционально)
+MAX_BROADCAST_CHUNK_SIZE=30
+BROADCAST_DELAY=0.5 
