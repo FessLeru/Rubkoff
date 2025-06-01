@@ -382,8 +382,8 @@ async def refresh_catalog(callback: CallbackQuery, session: AsyncSession) -> Non
         return
 
     try:
-        is_admin = await is_admin(callback.from_user.id, session)
-        if not is_admin:
+        user_is_admin = await is_admin(callback.from_user.id, session)
+        if not user_is_admin:
             await callback.answer("❌ Доступ запрещен")
             return
 
