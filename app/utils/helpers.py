@@ -127,37 +127,33 @@ async def notify_house_selection(
         message = (
             f"🏠 Пользователю {username} (ID: {user_id}) подобран дом:\n\n"
             f"🔑 {house['name']}\n"
+            f"💰 Цена: {house.get('price', 'Не указана')} ₽\n"
             f"📐 Площадь: {house['area']} м²\n"
         )
         
-        if house['bedrooms']:
+        if house.get('bedrooms'):
             message += f"🛏️ Спален: {house['bedrooms']}\n"
-        if house['bathrooms']:
+        if house.get('bathrooms'):
             message += f"🚿 Санузлов: {house['bathrooms']}\n"
-        if house['floors']:
+        if house.get('floors'):
             message += f"⬆️ Этажей: {house['floors']}\n"
             
         message += f"\n🌐 {house['url']}"
         
-        # Send notification with image if available
-        if house['image_url']:
-            await bot.send_photo(
-                chat_id=config.NOTIFICATION_CHAT_ID,
-                photo=house['image_url'],
-                caption=message
-            )
-        else:
-            await bot.send_message(
-                chat_id=config.NOTIFICATION_CHAT_ID,
-                text=message
-            )
+        # Send only text notification (no photo)
+        await bot.send_message(
+            chat_id=config.NOTIFICATION_CHAT_ID,
+            text=message
+        )
+        
+        logger.info(f"Sent house selection notification for user {user_id}")
         
         # Log action
         if session:
             await log_user_action(
                 user_id=user_id,
                 action="house_selected",
-                house_id=house['id'],
+                house_id=house.get('id'),
                 session=session
             )
         

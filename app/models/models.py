@@ -21,6 +21,12 @@ class House(Base):
     url = Column(String(255), nullable=False)
     image_url = Column(String(255), nullable=True)
     
+    # Additional fields based on page.html structure
+    house_size = Column(String(50), nullable=True)  # размер дома (например "20,2x13,5 м")
+    badges = Column(String(255), nullable=True)     # бейджи (например "Вживую", "Видео обзор")
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
     @validates('price', 'area')
     def validate_positive(self, key: str, value: float) -> float:
         if value < 0:

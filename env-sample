@@ -1,29 +1,49 @@
-# Необходимые настройки (обязательно заполните)
-BOT_TOKEN=your_bot_token_here
+# Telegram Bot Configuration
+BOT_TOKEN=your_telegram_bot_token_here
+
+# OpenAI Configuration (required for production mode)
 OPENAI_API_KEY=your_openai_api_key_here
 
-# Настройки администраторов
-# IDs через запятую, без пробелов: 123456789,987654321
+# Admin Configuration
 ADMIN_IDS=123456789,987654321
 NOTIFICATION_CHAT_ID=-100123456789
+
+# Database Configuration
+DATABASE_URL=sqlite:///./bot.db
+
+# Company Configuration
+COMPANY_WEBSITE=https://rubkoff.ru
+
+# Mode Configuration
+# Set to true for testing without GPT (uses random houses from database)
+# Set to false for production with real GPT-based house selection
+MOCK_MODE=false
+
+# Mini App Configuration 
+# URL where frontend/index.html is hosted
+MINI_APP_URL=https://your-domain.com/
+# Base URL for API endpoints
+API_BASE_URL=https://your-domain.com/api
+
+# Logging Configuration
+LOG_LEVEL=INFO
+
+# Настройки режима работы
+# MOCK_MODE=true для тестирования без GPT, false для продакшена
+MOCK_MODE=false
 
 # Настройки OpenAI API (опционально)
 OPENAI_MODEL=gpt-3.5-turbo
 OPENAI_MAX_TOKENS=1000
 OPENAI_TEMPERATURE=0.7
 
-# Настройки базы данных (опционально)
-DATABASE_URL=sqlite+aiosqlite:///houses.db
-
 # Настройки сайта (опционально)
 RUBKOFF_URL=https://rubkoff.ru/catalog/doma-v-prodazhe/
 RUBKOFF_WORKS_URL=https://rubkoff.ru/nashi-raboty/
 COMPANY_NAME=Rubkoff
-COMPANY_WEBSITE=https://rubkoff.ru
 
 # Настройки приложения (опционально)
 DEBUG=False
-LOG_LEVEL=INFO
 LOG_FILE=bot.log
 
 # Языковые настройки (опционально)
@@ -35,4 +55,9 @@ AREA_SYMBOL=м²
 
 # Настройки рассылки (опционально)
 MAX_BROADCAST_CHUNK_SIZE=30
-BROADCAST_DELAY=0.5 
+BROADCAST_DELAY=0.5
+
+# XTunnel.ru Configuration (для внешнего доступа)
+# Получите ключ на https://cabinet.xtunnel.ru/
+XTUNNEL_API_KEY=your_xtunnel_api_key_here
+XTUNNEL_SUBDOMAIN=rubkoff-app 

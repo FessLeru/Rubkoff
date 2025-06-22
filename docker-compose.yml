@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  rubkoff-bot:
+    build: .
+    container_name: rubkoff-bot
+    ports:
+      - "8000:8000"
+    environment:
+      # Основные настройки
+      - BOT_TOKEN=${BOT_TOKEN}
+      - ADMIN_IDS=${ADMIN_IDS}
+      - MOCK_MODE=true
+      
+      # URL для tunnel4.com (замените на ваш)
+      - MINI_APP_URL=https://bb6fffc5-afcb-4f58-a544-335a0276c44c.tunnel4.com/frontend/
+      - API_BASE_URL=https://bb6fffc5-afcb-4f58-a544-335a0276c44c.tunnel4.com/api
+      - WEBHOOK_URL=https://bb6fffc5-afcb-4f58-a544-335a0276c44c.tunnel4.com/webhook
+      
+      # Дополнительные настройки
+      - DEBUG=true
+      - LOG_LEVEL=INFO
+      - OPENAI_API_KEY=test_key
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+volumes:
+  data:
+  logs: 

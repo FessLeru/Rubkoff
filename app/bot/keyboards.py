@@ -3,6 +3,7 @@ from typing import List, Optional
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, ReplyKeyboardMarkup, KeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
+from app.core.config import config
 from app.utils.constants import (
     START_COMMAND, HELP_COMMAND, ADMIN_COMMAND,
     BROADCAST_COMMAND, STATS_COMMAND, UPDATE_CATALOG_COMMAND,
@@ -73,6 +74,53 @@ def get_house_keyboard(house_id: int, show_more: bool = True) -> InlineKeyboardM
     kb.button(text=BUTTON_WEBSITE, callback_data=f"house:website:{house_id}")
     kb.button(text=BUTTON_RESTART, callback_data="restart_survey")
     kb.adjust(2, 1)
+    return kb.as_markup()
+
+def get_simple_house_keyboard() -> InlineKeyboardMarkup:
+    """Get simple keyboard for house result - no mini app, just basic options"""
+    kb = InlineKeyboardBuilder()
+    kb.button(text="Подобрать другой дом 🔄", callback_data="restart_survey")
+    kb.adjust(1)
+    return kb.as_markup()
+
+def get_house_result_keyboard(user_id: int = None) -> InlineKeyboardMarkup:
+    """Get keyboard for house result with mini app and restart options"""
+    kb = InlineKeyboardBuilder()
+    
+    # Mini app button - try to add WebApp if config allows
+    try:
+        # Create mini app URL with user_id
+        mini_app_url = f"{config.effective_mini_app_url}?user_id={user_id}" if user_id else config.effective_mini_app_url
+        
+        # Only add WebApp if URL is HTTPS (Telegram requirement)
+        if mini_app_url.startswith("https://"):
+            from aiogram.types import WebAppInfo
+            kb.button(
+                text="🏠 Открыть мини-приложение", 
+                web_app=WebAppInfo(url=mini_app_url)
+            )
+            kb.button(text="Подобрать другой дом 🔄", callback_data="restart_survey")
+        else:
+            # Fallback for HTTP URLs - show link instead
+            kb.button(text="🏠 Ссылка на приложение", callback_data=f"mini_app_link:{user_id}")
+            kb.button(text="Подобрать другой дом 🔄", callback_data="restart_survey")
+    except Exception:
+        # Fallback to simple buttons if WebApp fails
+        kb.button(text="🏠 Ссылка на приложение", callback_data=f"mini_app_link:{user_id}")
+        kb.button(text="Подобрать другой дом 🔄", callback_data="restart_survey")
+    
+    kb.adjust(1)
+    return kb.as_markup()
+
+def get_local_test_keyboard(user_id: int) -> InlineKeyboardMarkup:
+    """Get keyboard for local testing - no WebApp (requires HTTPS)"""
+    kb = InlineKeyboardBuilder()
+    
+    # Simple buttons without WebApp - Telegram requires HTTPS for WebApp
+    kb.button(text="Подобрать другой дом 🔄", callback_data="restart_survey")
+    kb.button(text="🧪 Локальный тест", callback_data="local_test_info")
+    kb.button(text="📊 API тест", callback_data="api_test_info")
+    kb.adjust(1)
     return kb.as_markup()
 
 def get_confirmation_keyboard(action: str) -> InlineKeyboardMarkup:

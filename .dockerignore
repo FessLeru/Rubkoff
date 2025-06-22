@@ -1,0 +1,72 @@
+# Git
+.git
+.gitignore
+
+# Python
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+env
+pip-log.txt
+pip-delete-this-directory.txt
+.tox
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.log
+.venv
+venv/
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Local files
+*.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Logs
+logs/
+*.log
+
+# Data
+data/
+
+# Temp files
+temp_*.py
+test_*.py
+run_complete_test.py
+run_api_only.py
+temp_tunnel_config.py
+
+# Documentation (кроме основного README)
+*.md
+!README.md
+
+# Batch files
+*.bat
+
+# Migration files (пример)
+migrations/versions/
+
+# Tunneling configs
+xtunnel_server.py 
