@@ -263,7 +263,7 @@ class BothServer:
         os.environ['MOCK_MODE'] = 'true'
         
         # Используем ваш новый xtunnel URL
-        tunnel_url = "https://db4c882b-b6b7-4528-a033-f961ba0e9afb.tunnel4.com"
+        tunnel_url = "https://c08cfb2b-3440-420d-a018-5587a0bd9087.tunnel4.com"
         
         # Настраиваем для вашего туннеля
         os.environ['WEBHOOK_URL'] = f"{tunnel_url}/webhook"

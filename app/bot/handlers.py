@@ -1,4 +1,4 @@
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
 import logging
 from aiogram import Router, F
 from aiogram.filters import CommandStart, Command
@@ -161,16 +161,16 @@ async def start_survey(callback: CallbackQuery, state: FSMContext, session: Asyn
             # Mock mode - show result immediately without questions
             logger.info(f"Mock mode - showing result immediately for user {callback.from_user.id}")
             
-            await callback.message.answer("🔍 Подбираю дом...")
+            await callback.message.answer("🔍 Подбираю 3 идеальных дома...")
             
             # Use mock service with database
-            house_data = await mock_service.process_mock_selection(callback.from_user.id, session)
-            if not house_data:
-                await callback.message.answer("К сожалению, подходящий дом не найден. Попробуйте изменить критерии поиска.")
+            houses_data = await mock_service.process_mock_selection(callback.from_user.id, session)
+            if not houses_data:
+                await callback.message.answer("К сожалению, подходящие дома не найдены. Попробуйте изменить критерии поиска.")
                 await callback.answer()
                 return
 
-            message = format_mock_house_message(house_data)
+            message = format_mock_houses_message(houses_data)
             
             # Choose keyboard based on environment
             if is_local_test():
@@ -179,16 +179,16 @@ async def start_survey(callback: CallbackQuery, state: FSMContext, session: Asyn
                 keyboard = get_house_result_keyboard(callback.from_user.id)
 
             await callback.message.answer(
-                f"✅ <b>Дом подобран!</b>\n\n{message}", 
+                f"✅ <b>Подобраны 3 дома специально для вас!</b>\n\n{message}", 
                 reply_markup=keyboard,
                 parse_mode="HTML"
             )
             
-            # Send notifications to all admins (without photo)
+            # Send notifications to all admins (use first house for notification)
             await notify_house_selection(
                 bot=callback.bot,
                 user=callback.from_user,
-                house=house_data,
+                house=houses_data[0],  # Send first house to admins
                 session=session
             )
             
@@ -314,7 +314,7 @@ async def local_test_info(callback: CallbackQuery, session: AsyncSession):
 
 @router.callback_query(F.data == "show_result")
 async def show_result(callback: CallbackQuery, state: FSMContext, session: AsyncSession) -> None:
-    """Show recommended house"""
+    """Show recommended houses"""
     try:
         if not callback.from_user:
             await callback.answer("Error: User not found")
@@ -323,17 +323,17 @@ async def show_result(callback: CallbackQuery, state: FSMContext, session: Async
         await register_or_update_user(callback.from_user, session)
         await log_user_action(callback.from_user.id, "show_result", session=session)
 
-        await callback.message.answer("🔍 Анализирую ваши ответы и подбираю идеальный дом...")
+        await callback.message.answer("🔍 Анализирую ваши ответы и подбираю 3 идеальных дома...")
 
         if config.MOCK_MODE:
             # Use mock service with database
-            house_data = await mock_service.process_mock_selection(callback.from_user.id, session)
-            if not house_data:
-                await callback.message.answer("К сожалению, подходящий дом не найден. Попробуйте изменить критерии поиска.")
+            houses_data = await mock_service.process_mock_selection(callback.from_user.id, session)
+            if not houses_data:
+                await callback.message.answer("К сожалению, подходящие дома не найдены. Попробуйте изменить критерии поиска.")
                 await callback.answer()
                 return
 
-            message = format_mock_house_message(house_data)
+            message = format_mock_houses_message(houses_data)
             
             # Choose keyboard based on environment
             if is_local_test():
@@ -342,16 +342,16 @@ async def show_result(callback: CallbackQuery, state: FSMContext, session: Async
                 keyboard = get_house_result_keyboard(callback.from_user.id)
 
             await callback.message.answer(
-                f"✅ <b>Дом подобран!</b>\n\n{message}", 
+                f"✅ <b>Подобраны 3 дома специально для вас!</b>\n\n{message}", 
                 reply_markup=keyboard,
                 parse_mode="HTML"
             )
             
-            # Send notifications to all admins (without photo)
+            # Send notifications to all admins (use first house for notification)
             await notify_house_selection(
                 bot=callback.bot,
                 user=callback.from_user,
-                house=house_data,
+                house=houses_data[0],  # Send first house to admins
                 session=session
             )
         else:
@@ -424,7 +424,7 @@ async def process_survey_step(message: Message, state: FSMContext, session: Asyn
                 kb.button(text="Пройти опрос заново", callback_data="restart_survey")
                 kb.adjust(1)
                 await message.answer(
-                    f"{response}\n\nТеперь вы можете увидеть подобранный дом или начать поиск заново.",
+                    f"{response}\n\nТеперь вы можете увидеть 3 подобранных дома или начать поиск заново.",
                     reply_markup=kb.as_markup()
                 )
             else:
@@ -530,6 +530,43 @@ def format_mock_house_message(house_data: Dict[str, Any]) -> str:
         message += f"\n📝 {house_data['description']}\n"
     
     message += f"\n🔗 <a href='{house_data['url']}'>Подробнее на сайте</a>"
+    
+    return message
+
+def format_mock_houses_message(houses_data: List[Dict[str, Any]]) -> str:
+    """Format mock houses message with recommendation scores and reasons"""
+    if not houses_data:
+        return "Дома не найдены."
+    
+    message = ""
+    for i, house_data in enumerate(houses_data, 1):
+        message += f"🏠 <b>Дом #{i}: {house_data['name']}</b>\n\n"
+        message += f"💰 Цена: {house_data['price']:,} ₽\n"
+        message += f"📏 Площадь: {house_data['area']} м²\n"
+        
+        if house_data.get('bedrooms'):
+            message += f"🛏 Спален: {house_data['bedrooms']}\n"
+        if house_data.get('bathrooms'):
+            message += f"🚿 Санузлов: {house_data['bathrooms']}\n"
+        if house_data.get('floors'):
+            message += f"🏗 Этажей: {house_data['floors']}\n"
+        
+        if house_data.get('recommendation_score'):
+            message += f"\n🎯 Соответствие: {house_data['recommendation_score']}%\n"
+        
+        if house_data.get('match_reasons'):
+            message += "\n✅ <b>Почему этот дом вам подходит:</b>\n"
+            for reason in house_data['match_reasons'][:3]:  # Show first 3 reasons
+                message += f"• {reason}\n"
+        
+        if house_data.get('description'):
+            message += f"\n📝 {house_data['description']}\n"
+        
+        message += f"🔗 <a href='{house_data['url']}'>Подробнее на сайте</a>\n"
+        
+        # Add separator between houses except for the last one
+        if i < len(houses_data):
+            message += "\n" + "─" * 40 + "\n\n"
     
     return message
 

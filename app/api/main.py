@@ -107,7 +107,26 @@ async def health_check():
 @app.get("/api/health")
 async def api_health_check():
     """API health check endpoint"""
-    return await health_check()
+    try:
+        # Check database connection
+        db_healthy = await db.check_connection()
+        
+        return {
+            "status": "healthy" if db_healthy else "unhealthy",
+            "database": "connected" if db_healthy else "disconnected",
+            "mock_mode": config.MOCK_MODE,
+            "version": "1.1.0"
+        }
+    except Exception as e:
+        logger.error(f"API Health check failed: {e}")
+        return JSONResponse(
+            status_code=503,
+            content={
+                "status": "unhealthy",
+                "error": str(e),
+                "mock_mode": config.MOCK_MODE
+            }
+        )
 
 
 @app.get("/info")

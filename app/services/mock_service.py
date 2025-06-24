@@ -127,31 +127,61 @@ class MockHouseSelectionService:
         
         return random.sample(reasons_pool, len(reasons_pool))
     
-    async def process_mock_selection(self, user_id: int, session: AsyncSession) -> Optional[Dict[str, Any]]:
+    async def process_mock_selection(self, user_id: int, session: AsyncSession) -> Optional[List[Dict[str, Any]]]:
         """
         Process house selection in mock mode
-        Returns a random house from database with mock enhancement
+        Returns 3 random houses from database with mock enhancement
         """
         try:
-            house_data = await self.get_random_house_from_db(session)
+            # Use existing method to get 3 houses
+            houses_data = await self.get_mock_houses_for_mini_app(user_id, session, limit=3)
             
-            if not house_data:
+            if not houses_data:
                 return None
             
-            # Add mock enhancement fields
-            house_data.update({
-                "recommendation_score": random.randint(90, 98),
-                "match_reasons": self._generate_mock_reasons()[:3],  # 3 random reasons
-                "selection_method": "mock_random",
-                "user_id": user_id
-            })
+            # Add additional mock enhancement fields to each house
+            for house_data in houses_data:
+                house_data.update({
+                    "selection_method": "mock_random",
+                    "user_id": user_id
+                })
             
-            logger.info(f"Mock selection completed for user {user_id}: house {house_data['name']}")
-            return house_data
+            logger.info(f"Mock selection completed for user {user_id}: {len(houses_data)} houses selected")
+            return houses_data
             
         except Exception as e:
             logger.error(f"Error in mock selection process: {e}", exc_info=True)
             return None
+    
+    async def process_mock_response(self, user_id: int, user_message: str) -> tuple[str, bool]:
+        """
+        Process user response in mock mode
+        Returns response text and completion status
+        """
+        try:
+            # Mock responses for different stages
+            mock_responses = [
+                "Отлично! Расскажите о желаемой площади дома.",
+                "Понятно! А сколько комнат вам нужно?",
+                "Хорошо! Какой бюджет вы рассматриваете?",
+                "Спасибо за ответы! Анализирую ваши предпочтения и подберу 3 лучших варианта домов."
+            ]
+            
+            # Simulate completion after 4 responses
+            response_count = random.randint(1, 4)
+            is_complete = response_count >= 4
+            
+            if is_complete:
+                response = "Спасибо за ответы! Анализирую ваши предпочтения и подберу 3 лучших варианта домов."
+            else:
+                response = random.choice(mock_responses[:-1])
+            
+            logger.info(f"Mock response generated for user {user_id}: complete={is_complete}")
+            return response, is_complete
+            
+        except Exception as e:
+            logger.error(f"Error in mock response processing: {e}", exc_info=True)
+            return "Произошла ошибка. Попробуйте позже.", False
     
     def is_mock_mode(self) -> bool:
         """Check if service is in mock mode (always True for this service)"""
@@ -178,5 +208,5 @@ async def mock_chat_with_gpt(user_message: str, conversation_history: List[Dict[
 
 async def mock_find_best_house(conversation_history: List[Dict[str, str]], houses: List[Dict[str, Any]], user_id: int, session: AsyncSession) -> Optional[int]:
     """Mock version of find_best_house"""
-    house = await mock_service.get_mock_house_recommendation(user_id, session)
-    return house["id"] if house else None 
+    house_data = await mock_service.get_random_house_from_db(session)
+    return house_data["id"] if house_data else None 

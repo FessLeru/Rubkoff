@@ -48,8 +48,8 @@ async def get_user_recommendations(
             raise HTTPException(status_code=404, detail="User not found")
         
         if config.MOCK_MODE:
-            # Use mock service with real database houses
-            houses = await mock_service.get_mock_houses_for_mini_app(user_id, session)
+            # Use mock service with real database houses - get 3 houses
+            houses = await mock_service.get_mock_houses_for_mini_app(user_id, session, limit=3)
             recommendations = [HouseSchema(**house) for house in houses]
             
             # Mock criteria
