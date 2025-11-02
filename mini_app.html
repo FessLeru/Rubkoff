@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Избранные дома</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #ffffff;
+            color: #000000;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header {
+            padding: 16px;
+            text-align: center;
+            background: #ffffff;
+            border-bottom: 1px solid #e0e0e0;
+            z-index: 10;
+        }
+
+        .header h1 {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .header .counter {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .houses-container {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .house-slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            transform: translateX(100%);
+            transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+                        opacity 0.4s ease;
+            display: flex;
+            flex-direction: column;
+            background: #ffffff;
+        }
+
+        .house-slide.active {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .house-slide.prev {
+            transform: translateX(-100%);
+        }
+
+        .house-slide.next {
+            transform: translateX(100%);
+        }
+
+        .image-gallery {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+            background: #f5f5f5;
+        }
+
+        .image-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            transform: scale(0.95);
+            transition: transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+                        opacity 0.5s ease;
+        }
+
+        .image-container.active {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .image-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            background: #f5f5f5;
+        }
+
+        .image-counter {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: rgba(0, 0, 0, 0.6);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            z-index: 5;
+        }
+
+        .house-info {
+            padding: 20px;
+            background: #ffffff;
+            border-top: 1px solid #e0e0e0;
+            max-height: 40%;
+            overflow-y: auto;
+        }
+
+        .house-title {
+            font-size: 22px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: #000;
+        }
+
+        .house-description {
+            font-size: 14px;
+            line-height: 1.6;
+            color: #333;
+            margin-bottom: 16px;
+        }
+
+        .house-characteristics {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .characteristic-item {
+            background: #f8f8f8;
+            padding: 10px;
+            border-radius: 8px;
+        }
+
+        .characteristic-label {
+            font-size: 11px;
+            color: #666;
+            margin-bottom: 4px;
+        }
+
+        .characteristic-value {
+            font-size: 14px;
+            font-weight: 600;
+            color: #000;
+        }
+
+        .navigation-buttons {
+            display: flex;
+            gap: 12px;
+            padding: 16px;
+            background: #ffffff;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .nav-btn {
+            flex: 1;
+            padding: 14px;
+            background: #2481cc;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .nav-btn:active {
+            background: #1a6ba8;
+        }
+
+        .nav-btn:disabled {
+            background: #cccccc;
+            cursor: not-allowed;
+        }
+
+        .image-nav {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 10;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+            transition: background 0.2s;
+        }
+
+        .image-nav:active {
+            background: rgba(255, 255, 255, 1);
+        }
+
+        .image-nav.prev {
+            left: 12px;
+        }
+
+        .image-nav.next {
+            right: 12px;
+        }
+
+        .image-nav svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .empty-state-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+
+        .empty-state-text {
+            font-size: 18px;
+            color: #666;
+            margin-bottom: 8px;
+        }
+
+        .empty-state-subtext {
+            font-size: 14px;
+            color: #999;
+        }
+
+        /* Smooth scrollbar */
+        .house-info::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .house-info::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .house-info::-webkit-scrollbar-thumb {
+            background: #ccc;
+            border-radius: 2px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Рекомендуемые варианты</h1>
+            <div class="counter" id="counter">0 / 0</div>
+        </div>
+
+        <div class="houses-container" id="housesContainer">
+            <div class="empty-state" id="emptyState">
+                <div class="empty-state-icon">🏠</div>
+                <div class="empty-state-text">Нет вариантов для показа</div>
+                <div class="empty-state-subtext">Попробуйте выбрать другие параметры</div>
+            </div>
+        </div>
+
+        <div class="navigation-buttons" id="navButtons" style="display: none;">
+            <button class="nav-btn" id="prevHouseBtn">← Предыдущий</button>
+            <button class="nav-btn" id="nextHouseBtn">Следующий →</button>
+        </div>
+    </div>
+
+    <script>
+        let allProjects = [];
+        let likedHouses = [];
+        let currentHouseIndex = 0;
+        let currentImageIndex = 0;
+
+        // Initialize Telegram WebApp
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+        tg.ready();
+
+        // Load projects from JSON file
+        async function loadProjects() {
+            try {
+                // Get recommended house URLs from URL parameters
+                const urlParams = new URLSearchParams(window.location.search);
+                const houseUrlsParam = urlParams.get('house_urls');
+                
+                let houseUrls = [];
+                if (houseUrlsParam) {
+                    try {
+                        houseUrls = JSON.parse(decodeURIComponent(houseUrlsParam));
+                    } catch (e) {
+                        console.error('Error parsing house_urls:', e);
+                    }
+                }
+
+                // Load projects from JSON file
+                // Определяем базовый путь из текущего URL
+                const currentPath = window.location.pathname;
+                const basePath = currentPath.substring(0, currentPath.lastIndexOf('/') + 1);
+                
+                // Пробуем разные варианты пути к JSON файлу
+                const possiblePaths = [
+                    basePath + 'rubkoff_projects.json',  // Относительно текущей папки
+                    './rubkoff_projects.json',            // Текущая директория
+                    'rubkoff_projects.json',             // Текущая директория (без точки)
+                    '/Rubkoff/rubkoff_projects.json',     // Абсолютный путь
+                    'https://alexanik.ru/Rubkoff/rubkoff_projects.json'  // Полный URL
+                ];
+                
+                let response = null;
+                let jsonPath = '';
+                let lastError = null;
+                
+                for (const path of possiblePaths) {
+                    try {
+                        response = await fetch(path);
+                        if (response.ok) {
+                            jsonPath = path;
+                            break;
+                        }
+                    } catch (error) {
+                        lastError = error;
+                        continue;
+                    }
+                }
+                
+                if (!response || !response.ok) {
+                    const errorMsg = lastError ? lastError.message : `HTTP ${response?.status || 'unknown'}`;
+                    throw new Error('Не удалось загрузить rubkoff_projects.json. Проверьте, что файл находится в той же папке, что и mini_app.html. Попробованные пути: ' + possiblePaths.join(', ') + '. Ошибка: ' + errorMsg);
+                }
+                
+                allProjects = await response.json();
+                
+                // Filter projects based on recommended URLs
+                if (houseUrls.length > 0) {
+                    likedHouses = allProjects.filter(project => 
+                        houseUrls.includes(project.url)
+                    );
+                } else {
+                    // Если URL не переданы, берем первые 3 проекта
+                    likedHouses = allProjects.slice(0, 3);
+                }
+
+                if (likedHouses.length > 0) {
+                    renderHouses();
+                } else {
+                    document.getElementById('emptyState').style.display = 'flex';
+                }
+            } catch (error) {
+                console.error('Error loading projects:', error);
+                const emptyState = document.getElementById('emptyState');
+                emptyState.innerHTML = 
+                    '<div class="empty-state-icon">❌</div>' +
+                    '<div class="empty-state-text">Ошибка загрузки данных</div>' +
+                    '<div class="empty-state-subtext">' + error.message + '</div>';
+                emptyState.style.display = 'flex';
+            }
+        }
+
+        function renderHouses() {
+            const container = document.getElementById('housesContainer');
+            container.innerHTML = '';
+            
+            likedHouses.forEach((house, index) => {
+                const slide = document.createElement('div');
+                slide.className = `house-slide ${index === 0 ? 'active' : ''}`;
+                slide.innerHTML = `
+                    <div class="image-gallery">
+                        ${house.images.map((img, imgIndex) => `
+                            <div class="image-container ${imgIndex === 0 ? 'active' : ''}">
+                                <img src="${img}" alt="${house.title}" loading="lazy">
+                            </div>
+                        `).join('')}
+                        ${house.images.length > 1 ? `
+                            <div class="image-counter" id="imageCounter-${index}">1 / ${house.images.length}</div>
+                            <button class="image-nav prev" onclick="changeImage(${index}, -1)">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M15 18l-6-6 6-6"/>
+                                </svg>
+                            </button>
+                            <button class="image-nav next" onclick="changeImage(${index}, 1)">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M9 18l6-6-6-6"/>
+                                </svg>
+                            </button>
+                        ` : ''}
+                    </div>
+                    <div class="house-info">
+                        <div class="house-title">${house.title}</div>
+                        ${house.description ? `<div class="house-description">${house.description}</div>` : ''}
+                        ${Object.keys(house.characteristics || {}).length > 0 ? `
+                            <div class="house-characteristics">
+                                ${Object.entries(house.characteristics).map(([key, value]) => `
+                                    <div class="characteristic-item">
+                                        <div class="characteristic-label">${key}</div>
+                                        <div class="characteristic-value">${value}</div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+                container.appendChild(slide);
+            });
+
+            updateCounter();
+            updateNavigationButtons();
+            document.getElementById('navButtons').style.display = 'flex';
+        }
+
+        function changeImage(houseIndex, direction) {
+            const house = likedHouses[houseIndex];
+            if (!house || house.images.length <= 1) return;
+
+            const slide = document.querySelectorAll('.house-slide')[houseIndex];
+            const images = slide.querySelectorAll('.image-container');
+            const counter = slide.querySelector('.image-counter');
+            
+            let newIndex = currentImageIndex + direction;
+            if (newIndex < 0) newIndex = house.images.length - 1;
+            if (newIndex >= house.images.length) newIndex = 0;
+
+            images[currentImageIndex].classList.remove('active');
+            images[newIndex].classList.add('active');
+            currentImageIndex = newIndex;
+            
+            if (counter) {
+                counter.textContent = `${newIndex + 1} / ${house.images.length}`;
+            }
+        }
+
+        function showHouse(index) {
+            if (index < 0 || index >= likedHouses.length) return;
+
+            const slides = document.querySelectorAll('.house-slide');
+            const currentSlide = slides[currentHouseIndex];
+            const newSlide = slides[index];
+
+            if (index > currentHouseIndex) {
+                currentSlide.classList.remove('active');
+                currentSlide.classList.add('prev');
+                newSlide.classList.remove('next');
+                newSlide.classList.add('active');
+            } else if (index < currentHouseIndex) {
+                currentSlide.classList.remove('active');
+                currentSlide.classList.add('next');
+                newSlide.classList.remove('prev');
+                newSlide.classList.add('active');
+            }
+
+            // Reset image index for new house
+            currentImageIndex = 0;
+            const newImages = newSlide.querySelectorAll('.image-container');
+            newImages.forEach((img, idx) => {
+                img.classList.toggle('active', idx === 0);
+            });
+            const counter = newSlide.querySelector('.image-counter');
+            if (counter && likedHouses[index].images.length > 0) {
+                counter.textContent = `1 / ${likedHouses[index].images.length}`;
+            }
+
+            currentHouseIndex = index;
+            updateCounter();
+            updateNavigationButtons();
+        }
+
+        function updateCounter() {
+            document.getElementById('counter').textContent = 
+                `${currentHouseIndex + 1} / ${likedHouses.length}`;
+        }
+
+        function updateNavigationButtons() {
+            document.getElementById('prevHouseBtn').disabled = currentHouseIndex === 0;
+            document.getElementById('nextHouseBtn').disabled = currentHouseIndex === likedHouses.length - 1;
+        }
+
+        document.getElementById('prevHouseBtn').addEventListener('click', () => {
+            if (currentHouseIndex > 0) {
+                showHouse(currentHouseIndex - 1);
+            }
+        });
+
+        document.getElementById('nextHouseBtn').addEventListener('click', () => {
+            if (currentHouseIndex < likedHouses.length - 1) {
+                showHouse(currentHouseIndex + 1);
+            }
+        });
+
+        // Touch/swipe support
+        let touchStartX = 0;
+        let touchEndX = 0;
+
+        document.getElementById('housesContainer').addEventListener('touchstart', (e) => {
+            touchStartX = e.changedTouches[0].screenX;
+        });
+
+        document.getElementById('housesContainer').addEventListener('touchend', (e) => {
+            touchEndX = e.changedTouches[0].screenX;
+            handleSwipe();
+        });
+
+        function handleSwipe() {
+            const swipeThreshold = 50;
+            const diff = touchStartX - touchEndX;
+
+            if (Math.abs(diff) > swipeThreshold) {
+                if (diff > 0 && currentHouseIndex < likedHouses.length - 1) {
+                    // Swipe left - next house
+                    showHouse(currentHouseIndex + 1);
+                } else if (diff < 0 && currentHouseIndex > 0) {
+                    // Swipe right - previous house
+                    showHouse(currentHouseIndex - 1);
+                }
+            }
+        }
+
+        // Image swipe support
+        let imageTouchStartX = 0;
+        let imageTouchEndX = 0;
+
+        document.addEventListener('touchstart', (e) => {
+            if (e.target.closest('.image-gallery')) {
+                imageTouchStartX = e.changedTouches[0].screenX;
+            }
+        });
+
+        document.addEventListener('touchend', (e) => {
+            if (e.target.closest('.image-gallery')) {
+                imageTouchEndX = e.changedTouches[0].screenX;
+                handleImageSwipe();
+            }
+        });
+
+        function handleImageSwipe() {
+            const swipeThreshold = 50;
+            const diff = imageTouchStartX - imageTouchEndX;
+            const house = likedHouses[currentHouseIndex];
+
+            if (Math.abs(diff) > swipeThreshold && house.images.length > 1) {
+                if (diff > 0) {
+                    changeImage(currentHouseIndex, 1); // Swipe left - next image
+                } else {
+                    changeImage(currentHouseIndex, -1); // Swipe right - previous image
+                }
+            }
+        }
+
+        // Load on start
+        loadProjects();
+    </script>
+</body>
+</html>
+
