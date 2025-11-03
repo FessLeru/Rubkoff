@@ -78,12 +78,19 @@ async def register_or_update_user(tg_user: TgUser, session: AsyncSession) -> Opt
             stat = Statistic(user_id=tg_user.id, action="registered")
             session.add(stat)
             
-        await session.commit()
+        await session.flush()
         return user
     except Exception as e:
         logger.error(f"Error registering user {tg_user.id}: {e}", exc_info=True)
         await session.rollback()
-        return None
+        # Try to fetch existing user after rollback
+        try:
+            result = await session.execute(
+                select(User).where(User.user_id == tg_user.id)
+            )
+            return result.scalars().first()
+        except:
+            return None
 
 async def log_user_action(
     user_id: int,
