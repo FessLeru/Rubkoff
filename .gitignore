@@ -13,6 +13,7 @@ build/
 
 # Database
 *.db
+!houses.db  # Включаем houses.db в репозиторий для начальных данных
 *.sqlite3
 
 # Logs
