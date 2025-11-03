@@ -176,11 +176,21 @@ def is_survey_complete(response: str) -> bool:
         "поиск подходящих вариантов",
         "идеальные варианты",
         "нашел несколько вариантов",
-        "нашла несколько вариантов"
+        "нашла несколько вариантов",
+        "рекомендую обратить внимание",
+        "предлагаю рассмотреть",
+        "следующие варианты",
+        "подходящие варианты",
+        "вот варианты",
+        "я рекомендую"
     ]
     
     response_lower = response.lower()
-    return any(keyword in response_lower for keyword in completion_keywords)
+    
+    # Также проверяем наличие списка домов (1., 2., 3.)
+    has_numbered_list = bool(re.search(r'\d+\.\s+\*?\*?[А-Яа-я]', response))
+    
+    return any(keyword in response_lower for keyword in completion_keywords) or has_numbered_list
 
 
 async def save_gpt_recommendations(
