@@ -29,9 +29,7 @@ class Settings(BaseSettings):
     )
 
     # Website settings
-    RUBKOFF_URL: str = "https://rubkoff.com/catalog/doma-v-prodazhe/"
     RUBKOFF_WORKS_URL: str = "https://rubkoff.com/nashi-raboty/"
-    COMPANY_NAME: str = "Rubkoff"
     COMPANY_WEBSITE: str = "https://rubkoff.com"
 
     # Mini App settings - required for production
@@ -50,9 +48,6 @@ class Settings(BaseSettings):
     # Broadcast settings
     MAX_BROADCAST_CHUNK_SIZE: int = 30
     BROADCAST_DELAY: float = 0.5
-
-    # URLs - production ready
-    WEBHOOK_URL: str = Field("", description="Webhook URL for Telegram")
 
     # Environment detection
     DOCKER_ENV: bool = Field(False, description="Whether running in Docker")
@@ -95,7 +90,6 @@ class Settings(BaseSettings):
         logger.info(f"   Environment: {'Docker' if self.DOCKER_ENV else 'Local'}")
         logger.info(f"   Debug: {self.DEBUG}")
         logger.info(f"   Database: {self.DATABASE_URL}")
-        logger.info(f"   Webhook URL: {self.WEBHOOK_URL}")
         logger.info(f"   Mini App URL: {self.MINI_APP_URL}")
         logger.info(f"   API Base URL: {self.API_BASE_URL}")
 
@@ -108,11 +102,6 @@ class Settings(BaseSettings):
         return user_id in self._admin_ids
 
     # Dynamic URL support for different environments
-    @property
-    def effective_webhook_url(self) -> str:
-        """Get effective webhook URL based on environment"""
-        return self.WEBHOOK_URL
-    
     @property 
     def effective_mini_app_url(self) -> str:
         """Get effective mini app URL based on environment"""

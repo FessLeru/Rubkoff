@@ -63,7 +63,6 @@ services:
       - OPENAI_TEMPERATURE=${OPENAI_TEMPERATURE:-0.7}
       
       # URL settings (critical for production)
-      - WEBHOOK_URL=${WEBHOOK_URL}
       - MINI_APP_URL=${MINI_APP_URL}
       - API_BASE_URL=${API_BASE_URL}
       
