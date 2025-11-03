@@ -1,0 +1,12 @@
+version: "3.9"
+
+services:
+  rubkoff_bot:
+    build: .
+    container_name: rubkoff_bot
+    restart: always
+    env_file:
+      - .env
+    volumes:
+      - .:/app
+    command: ["python", "main.py"]
