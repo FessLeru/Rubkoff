@@ -51,8 +51,22 @@ async def start_survey(callback: CallbackQuery, state: FSMContext, session: Asyn
 
         system_message = {
             "role": "system",
-            "content": "Начни опрос клиента для подбора дома сразу с первого вопроса про бюджет. "
-            "Используй формат (1/8). Не спрашивай разрешения начать опрос и не добавляй лишнего текста."
+            "content": (
+                "Ты — опытный консультант по загородной недвижимости от компании Rubkoff. "
+                "У тебя 10+ лет опыта. Ты помогаешь клиентам найти идеальный дом.\n\n"
+                "СТИЛЬ ОБЩЕНИЯ:\n"
+                "- Дружелюбный и профессиональный, но не официальный\n"
+                "- Используй эмодзи умеренно для живости\n"
+                "- Показывай экспертность через детали\n"
+                "- Давай полезные советы по ходу беседы\n\n"
+                "ЗАДАЧИ:\n"
+                "1. Задай 6-8 вопросов о предпочтениях клиента\n"
+                "2. Спрашивай по одному вопросу за раз, используй формат (1/8), (2/8) и т.д.\n"
+                "3. Вопросы: бюджет, площадь, этажность, стиль, материалы, особенности, расположение\n"
+                "4. После всех вопросов скажи 'Отлично! Подберу для вас идеальные варианты' и предложи 2-3 дома\n\n"
+                f"Доступные дома для подбора:\n{house_info}\n\n"
+                "НАЧНИ ПРЯМО СЕЙЧАС с первого вопроса про бюджет. Не спрашивай разрешения."
+            )
         }
 
         conversation_history = [system_message]
@@ -128,12 +142,18 @@ async def process_survey_step(message: Message, state: FSMContext, session: Asyn
         if is_survey_complete(gpt_response):
             await state.set_state(SurveyStates.finished)
             
+            # Сохранить рекомендации GPT в базу данных
+            await save_gpt_recommendations(message.from_user.id, gpt_response, houses, state, session)
+            
             kb = InlineKeyboardBuilder()
-            kb.button(text="Показать результат", callback_data="show_result")
-            kb.button(text="Пройти опрос заново", callback_data="restart_survey")
+            kb.button(text="🏠 Посмотреть подобранные дома", web_app={"url": f"{config.effective_mini_app_url}?user_id={message.from_user.id}"})
+            kb.button(text="🔄 Пройти опрос заново", callback_data="restart_survey")
+            kb.adjust(1)
             await message.answer(
-                f"{gpt_response}\n\nТеперь вы можете увидеть подобранный дом или начать поиск заново.",
-                reply_markup=kb.as_markup()
+                "✅ <b>Отлично! Я подобрал для вас лучшие варианты!</b>\n\n"
+                "Нажмите кнопку ниже, чтобы посмотреть подобранные дома с полным описанием.",
+                reply_markup=kb.as_markup(),
+                parse_mode="HTML"
             )
         else:
             await message.answer(gpt_response)
@@ -161,3 +181,54 @@ def is_survey_complete(response: str) -> bool:
     
     response_lower = response.lower()
     return any(keyword in response_lower for keyword in completion_keywords)
+
+
+async def save_gpt_recommendations(
+    user_id: int, 
+    gpt_response: str, 
+    all_houses: list,
+    state: FSMContext,
+    session: AsyncSession
+) -> None:
+    """Извлечь номера домов из ответа GPT и сохранить рекомендации"""
+    try:
+        import re
+        from utils.helpers import save_user_recommendations
+        
+        # Извлечь все номера после "Дом" или "ID" из ответа GPT
+        pattern = r'(?:Дом|ID)\s*(\d+)'
+        house_ids = re.findall(pattern, gpt_response)
+        
+        if not house_ids:
+            # Если не нашли номера, сохраним первый дом
+            logger.warning("No house IDs found in GPT response, using first house")
+            if all_houses:
+                house_ids = [str(all_houses[0]['id'])]
+        
+        # Получить дома по ID
+        recommended_houses = []
+        for house_id_str in house_ids[:3]:  # Максимум 3 дома
+            try:
+                house_id = int(house_id_str)
+                house = next((h for h in all_houses if h['id'] == house_id), None)
+                if house:
+                    recommended_houses.append(house)
+            except ValueError:
+                continue
+        
+        if recommended_houses:
+            # Сохранить рекомендации
+            data = await state.get_data()
+            criteria = data.get("conversation_history", [])
+            await save_user_recommendations(
+                user_id=user_id,
+                houses=recommended_houses,
+                criteria={"conversation_history": criteria, "gpt_response": gpt_response},
+                session=session
+            )
+            logger.info(f"Saved {len(recommended_houses)} recommendations for user {user_id}")
+        else:
+            logger.error(f"No valid houses found for user {user_id}")
+            
+    except Exception as e:
+        logger.error(f"Error saving GPT recommendations: {e}", exc_info=True)
