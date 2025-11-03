@@ -4,6 +4,7 @@
 
 from typing import Optional, Dict, Any, List
 import logging
+import re
 from datetime import datetime
 from aiogram import Router, F
 from aiogram.types import Message, CallbackQuery
@@ -202,7 +203,6 @@ async def save_gpt_recommendations(
 ) -> None:
     """Извлечь дома из ответа GPT и сохранить рекомендации"""
     try:
-        import re
         from utils.helpers import save_user_recommendations
         
         recommended_houses = []
