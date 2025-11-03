@@ -190,31 +190,42 @@ async def save_gpt_recommendations(
     state: FSMContext,
     session: AsyncSession
 ) -> None:
-    """Извлечь номера домов из ответа GPT и сохранить рекомендации"""
+    """Извлечь дома из ответа GPT и сохранить рекомендации"""
     try:
         import re
         from utils.helpers import save_user_recommendations
         
-        # Извлечь все номера после "Дом" или "ID" из ответа GPT
+        recommended_houses = []
+        
+        # Способ 1: Попробовать найти по ID (например "Дом 9", "ID 23")
         pattern = r'(?:Дом|ID)\s*(\d+)'
         house_ids = re.findall(pattern, gpt_response)
         
-        if not house_ids:
-            # Если не нашли номера, сохраним первый дом
-            logger.warning("No house IDs found in GPT response, using first house")
-            if all_houses:
-                house_ids = [str(all_houses[0]['id'])]
+        if house_ids:
+            for house_id_str in house_ids[:3]:
+                try:
+                    house_id = int(house_id_str)
+                    house = next((h for h in all_houses if h['id'] == house_id), None)
+                    if house:
+                        recommended_houses.append(house)
+                except ValueError:
+                    continue
         
-        # Получить дома по ID
-        recommended_houses = []
-        for house_id_str in house_ids[:3]:  # Максимум 3 дома
-            try:
-                house_id = int(house_id_str)
-                house = next((h for h in all_houses if h['id'] == house_id), None)
-                if house:
+        # Способ 2: Если ID не найдены, ищем по названиям домов
+        if not recommended_houses:
+            logger.info("No IDs found, searching by house names")
+            for house in all_houses:
+                house_name = house.get('name', '')
+                # Проверяем есть ли название дома в ответе GPT
+                if house_name and house_name.lower() in gpt_response.lower():
                     recommended_houses.append(house)
-            except ValueError:
-                continue
+                    if len(recommended_houses) >= 3:
+                        break
+        
+        # Способ 3: Если ничего не найдено, взять первые 3 дома
+        if not recommended_houses:
+            logger.warning("No houses matched in GPT response, using first 3 houses")
+            recommended_houses = all_houses[:3]
         
         if recommended_houses:
             # Сохранить рекомендации
