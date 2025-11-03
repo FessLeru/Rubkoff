@@ -45,7 +45,7 @@ async def start_survey(callback: CallbackQuery, state: FSMContext, session: Asyn
             return
 
         house_info = "\n\n".join([
-            f"Дом {house['name']}: {house['price']} руб., {house['area']} м², {house['bedrooms']} спален, {house['bathrooms']} ванных, описание: {house['description'][:200]}"
+            f"Дом {house['name']}: {house.get('price', 0)} руб., {house.get('area', 0)} м², {house.get('bedrooms', 0)} спален, {house.get('bathrooms', 0)} ванных, описание: {(house.get('description') or '')[:200]}"
             for house in houses[:10]
         ])
 
