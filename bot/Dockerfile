@@ -21,6 +21,9 @@ COPY utils ./utils
 # Копирование кода бота
 COPY bot ./bot
 
+# Копирование page.html для парсинга
+COPY page.html ./page.html
+
 # Создание директорий для данных и логов
 RUN mkdir -p /app/data /app/logs
 
