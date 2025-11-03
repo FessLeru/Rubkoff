@@ -10,7 +10,7 @@ from sqlalchemy import select, func
 
 from core.db import db
 from models.models import House, User, Statistic
-from schemas import (
+from webapp_backend.schemas import (
     HouseSchema, 
     HouseListResponse, 
     HouseDetailResponse, 
