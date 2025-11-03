@@ -29,8 +29,8 @@ class Settings(BaseSettings):
     )
 
     # Website settings
-    RUBKOFF_WORKS_URL: str = "https://rubkoff.com/nashi-raboty/"
-    COMPANY_WEBSITE: str = "https://rubkoff.com"
+    RUBKOFF_WORKS_URL: str = "https://rubkoff.ru/nashi-raboty/"
+    COMPANY_WEBSITE: str = "https://rubkoff.ru"
 
     # Mini App settings - required for production
     MINI_APP_URL: str = Field("https://rubkoff.com", description="Mini app URL")
