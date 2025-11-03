@@ -18,9 +18,20 @@ class HouseScraper:
         self.url = config.RUBKOFF_WORKS_URL
 
     async def _make_request(self) -> Optional[str]:
-        """Make HTTP request to the website"""
+        """Make HTTP request to the website or read from local file"""
         try:
-            async with httpx.AsyncClient() as client:
+            # Try to read from local page.html first
+            local_file_path = "page.html"
+            try:
+                with open(local_file_path, 'r', encoding='utf-8') as f:
+                    html_content = f.read()
+                    logger.info(f"Successfully read from local file: {local_file_path}")
+                    return html_content
+            except FileNotFoundError:
+                logger.info(f"Local file {local_file_path} not found, fetching from URL")
+            
+            # Fallback to HTTP request
+            async with httpx.AsyncClient(verify=False) as client:
                 response = await client.get(self.url)
                 response.raise_for_status()
                 logger.info(f"HTTP Request: {response.status_code} {response.reason_phrase}")
