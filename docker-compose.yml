@@ -2,8 +2,8 @@ services:
   # Telegram Bot
   bot:
     build: 
-      context: ./bot
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: bot/Dockerfile
     container_name: rubkoff_bot
     restart: unless-stopped
     volumes:
@@ -36,8 +36,8 @@ services:
   # Приложение
   app:
     build: 
-      context: ./webapp_backend
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: webapp_backend/Dockerfile
     container_name: rubkoff_app
     restart: unless-stopped
     ports:

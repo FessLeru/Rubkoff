@@ -12,8 +12,14 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Копирование исходного кода
-COPY . .
+# Копирование общих модулей
+COPY core ./core
+COPY models ./models
+COPY services ./services
+COPY utils ./utils
+
+# Копирование кода бота
+COPY bot ./bot
 
 # Создание директорий для данных и логов
 RUN mkdir -p /app/data /app/logs
@@ -23,4 +29,4 @@ ENV PYTHONPATH=/app
 ENV DOCKER_ENV=true
 
 # Команда запуска
-CMD ["python", "start_bot.py"]
+CMD ["python", "-m", "bot.start_bot"]
