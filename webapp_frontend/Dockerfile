@@ -6,10 +6,10 @@ FROM node:20-alpine AS builder
 WORKDIR /app
 
 # Copy package files
-COPY package.json bun.lock* package-lock.json* yarn.lock* ./
+COPY package.json ./
 
-# Install dependencies (using npm as it's more compatible in Docker)
-RUN npm ci --legacy-peer-deps || npm install --legacy-peer-deps
+# Install dependencies (using npm)
+RUN npm install --legacy-peer-deps
 
 # Copy source code
 COPY . .
