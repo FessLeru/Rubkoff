@@ -12,11 +12,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from services.scraper import get_all_houses
 from services.gpt_service import chat_with_gpt, find_best_house
-from services.kafka_service import kafka_service
 from bot.keyboards import get_house_result_keyboard
 from bot.states import SurveyStates
 from utils.helpers import log_user_action, register_or_update_user
 from core.config import config
+from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 logger = logging.getLogger(__name__)
 
@@ -128,10 +128,6 @@ async def process_survey_step(message: Message, state: FSMContext, session: Asyn
         if is_survey_complete(gpt_response):
             await state.set_state(SurveyStates.finished)
             
-            # Отправить данные в Kafka
-            await send_survey_to_kafka(message.from_user.id, state, houses)
-            
-            from aiogram.utils.keyboard import InlineKeyboardBuilder
             kb = InlineKeyboardBuilder()
             kb.button(text="Показать результат", callback_data="show_result")
             kb.button(text="Пройти опрос заново", callback_data="restart_survey")
@@ -160,21 +156,3 @@ def is_survey_complete(response: str) -> bool:
     
     response_lower = response.lower()
     return any(keyword in response_lower for keyword in completion_keywords)
-
-
-async def send_survey_to_kafka(user_id: int, state: FSMContext, houses: list) -> None:
-    """Отправить данные опроса в Kafka"""
-    try:
-        data = await state.get_data()
-        survey_data = {
-            "timestamp": data.get("timestamp"),
-            "conversation_history": data.get("conversation_history", []),
-            "houses": houses
-        }
-        
-        await kafka_service.send_survey_result(user_id, survey_data)
-        logger.info(f"Survey data sent to Kafka for user {user_id}")
-    except Exception as e:
-        logger.error(f"Failed to send survey data to Kafka: {e}")
-
-

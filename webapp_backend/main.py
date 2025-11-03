@@ -11,7 +11,6 @@ from fastapi.staticfiles import StaticFiles
 from routers import houses, users, webhook
 from core.config import config
 from core.db import db
-from kafka_consumer import survey_consumer
 
 # Configure logging
 logging.basicConfig(
@@ -64,15 +63,6 @@ async def startup_event():
     try:
         await db.init_db()
         logger.info("API server started successfully")
-        
-        # Start Kafka consumer
-        if config.KAFKA_ENABLED:
-            logger.info("Starting Kafka consumer...")
-            await survey_consumer.start()
-            logger.info("Kafka consumer started successfully")
-        else:
-            logger.info("Kafka consumer disabled")
-        
         logger.info("API running in PRODUCTION MODE")
             
     except Exception as e:
@@ -83,13 +73,7 @@ async def startup_event():
 @app.on_event("shutdown")
 async def shutdown_event():
     """Cleanup on shutdown"""
-    try:
-        if config.KAFKA_ENABLED:
-            logger.info("Stopping Kafka consumer...")
-            await survey_consumer.stop()
-            logger.info("Kafka consumer stopped")
-    except Exception as e:
-        logger.error(f"Error stopping Kafka consumer: {e}")
+    logger.info("Shutting down API server...")
 
 
 @app.get("/")

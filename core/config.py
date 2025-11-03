@@ -54,11 +54,6 @@ class Settings(BaseSettings):
     # URLs - production ready
     WEBHOOK_URL: str = Field("", description="Webhook URL for Telegram")
 
-    # Kafka settings
-    KAFKA_BOOTSTRAP_SERVERS: str = Field("localhost:9092", description="Kafka bootstrap servers")
-    KAFKA_TOPIC: str = Field("survey_results", description="Kafka topic for survey results")
-    KAFKA_ENABLED: bool = Field(True, description="Enable Kafka integration")
-
     # Environment detection
     DOCKER_ENV: bool = Field(False, description="Whether running in Docker")
 

@@ -12,7 +12,6 @@ from core.config import config
 from core.db import db
 from bot.handlers import main_router, admin_router
 from bot.middlewares import DatabaseMiddleware, ThrottlingMiddleware
-from services.kafka_service import kafka_service
 
 # Configure logging
 logging.basicConfig(
@@ -44,11 +43,6 @@ async def main() -> None:
         await db.init_db()
         logger.info("Database initialized successfully")
         
-        # Initialize Kafka
-        logger.info("Initializing Kafka...")
-        await kafka_service.start()
-        logger.info("Kafka initialized successfully")
-        
         # Register middlewares
         logger.info("Registering middlewares...")
         dp.message.middleware(DatabaseMiddleware())
@@ -69,9 +63,6 @@ async def main() -> None:
     except Exception as e:
         logger.critical(f"Failed to start bot: {e}", exc_info=True)
         raise
-    finally:
-        # Stop Kafka
-        await kafka_service.stop()
 
 
 if __name__ == '__main__':

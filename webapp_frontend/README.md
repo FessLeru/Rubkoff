@@ -1,12 +1,85 @@
-# React + Vite
+# Rubkoff Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+React + Vite приложение для мини-приложения Rubkoff в Telegram.
 
-Currently, two official plugins are available:
+## 🚀 Разработка
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+### Локальный запуск
 
-## Expanding the ESLint configuration
+```bash
+# Установка зависимостей
+npm install
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+# Запуск dev сервера
+npm run dev
+```
+
+Приложение будет доступно на http://localhost:5173
+
+### Сборка для продакшена
+
+```bash
+# Сборка
+npm run build
+
+# Просмотр собранной версии
+npm run preview
+```
+
+## 🐳 Docker
+
+### Сборка образа
+
+```bash
+docker build -t rubkoff-frontend .
+```
+
+### Запуск контейнера
+
+```bash
+docker run -p 3000:80 rubkoff-frontend
+```
+
+Приложение будет доступно на http://localhost:3000
+
+### Использование с docker-compose
+
+```bash
+# Запуск всех сервисов
+docker-compose up -d
+
+# Запуск только фронтенда
+docker-compose up frontend
+```
+
+## 🔧 Конфигурация
+
+Переменные окружения настраиваются в файле `.env`:
+
+- `VITE_API_URL` - URL бэкенд API (по умолчанию: https://rubkoff.com/api)
+
+## 📦 Структура проекта
+
+```
+webapp_frontend/
+├── src/
+│   ├── components/      # React компоненты
+│   ├── pages/           # Страницы приложения
+│   ├── services/        # API сервисы
+│   ├── constants/       # Константы
+│   ├── config.js        # Конфигурация
+│   ├── App.jsx          # Главный компонент
+│   └── main.jsx         # Точка входа
+├── public/              # Статические файлы
+├── Dockerfile           # Docker конфигурация
+├── nginx.conf           # Nginx конфигурация
+└── vite.config.js       # Vite конфигурация
+```
+
+## 🏗️ Технологии
+
+- **React 19** - UI библиотека
+- **Vite** - Сборщик и dev сервер
+- **React Router** - Роутинг
+- **Axios** - HTTP клиент
+- **Nginx** - Web сервер (в production)
