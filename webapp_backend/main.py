@@ -8,7 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 
-from routers import houses, users, webhook
+from webapp_backend.routers import houses, users, webhook
 from core.config import config
 from core.db import db
 
